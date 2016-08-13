@@ -8,12 +8,18 @@ import cv2
 class Maze():
 
     def __init__(self):
-        self.maze = [[3, 3, 3, 3, 3, 3, 3, 3],
-                     [3, 1, 0, 0, 0, 0, 0, 3],
-                     [3, 0, 3, 0, 3, 0, 0, 3],
-                     [3, 0, 0, 0, 3, 0, 0, 3],
-                     [3, 0, 0, 0, 0, 0, 2, 3],
-                     [3, 3, 3, 3, 3, 3, 3, 3]]    # 0:aisle, 1:start, 2:goal, 3:wall
+        self.maze = [[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+                     [3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+                     [3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3],
+                     [3, 0, 0, 0, 0, 0, 3, 0, 0, 0, 3],
+                     [3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 3],
+                     [3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 3],
+                     [3, 0, 0, 0, 0, 0, 0, 3, 3, 0, 3],
+                     [3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3],
+                     [3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 3],
+                     [3, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3],
+                     [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+                     ]    # 0:aisle, 1:start, 2:goal, 3:wall
         self.maze_size = (len(self.maze[0]), len(self.maze)) # x, y
         self.unit_size = 60
         self.width = self.unit_size * self.maze_size[0]
@@ -25,29 +31,33 @@ class Maze():
             for x in range(self.maze_size[0]):
                 self.drawUnit(x, y)
 
-    def drawUnit(self, x, y, now = 0):
+    def drawUnit(self, x, y, now = 0, q = 0):
         start = (self.unit_size * x, self.unit_size * y)
         end = (start[0] + self.unit_size, start[1] + self.unit_size)
 
         if self.maze[y][x] == 1:
-            cv2.rectangle(self.img, start, end, (255, 255, 255), -1)
+            cv2.rectangle(self.img, start, end, (0, 255, 0), -1)    # (blue, geen, red)
         elif self.maze[y][x] == 2:
             cv2.rectangle(self.img, start, end, (255, 0, 0), -1)
         elif self.maze[y][x] == 3:
             cv2.rectangle(self.img, start, end, (128, 128, 128), -1)
         else:
-            cv2.rectangle(self.img, start, end, (0, 0, 0), -1)
+            if q == 0:
+                cv2.rectangle(self.img, start, end, (0, 0, 0), -1)
+            else:
+                cv2.rectangle(self.img, start, end, (0, 0, q), -1)
             cv2.rectangle(self.img, start, end, (128, 128, 128), 1)
 
         if now == 1:
             cv2.rectangle(self.img, start, end, (255, 255, 255), -1)
 
-    def update(self, position, new_position):
+    def update(self, position, new_position, q_value):
 
         y, x = position
         newy, newx = new_position
+        q = int(max(q_value[y][x]) * 255)
 
-        self.drawUnit(x, y)
+        self.drawUnit(x, y, 0, q)
         self.drawUnit(newx, newy, 1)
 
 class Agent():
@@ -117,8 +127,9 @@ class Agent():
 
         if self.maze[newy][newx] == 2:
             next_position = [1, 1]
-            print self.q_value[y][x]
-            cv2.waitKey(0)
+            print y, x-1, self.q_value[y][x-1]
+            print y, x, self.q_value[y][x]
+            # cv2.waitKey(0)
 
         print direction, next_position
 
@@ -134,7 +145,7 @@ class Agent():
         else:
             reward = 0
 
-        self.q_value[y][x][d] = self.q_value[y][x][d] + self.alpha * (reward + self.gamma * max(self.q_value[y][x]) - self.q_value[y][x][d])
+        self.q_value[y][x][d] = self.q_value[y][x][d] + self.alpha * (reward + self.gamma * max(self.q_value[newy][newx]) - self.q_value[y][x][d])
 
 def main():
 
@@ -148,7 +159,7 @@ def main():
     for i in range(16000):
 
         new_position = agent.action(position)
-        maze.update(position, new_position)
+        maze.update(position, new_position, agent.q_value)
 
         cv2.imshow('image', maze.img)
         cv2.waitKey(3)
