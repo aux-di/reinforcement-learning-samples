@@ -14,6 +14,6 @@
 python q-learning-maze.py
 ```
 
-after 16000 steps
+example after 16000 steps
 
 ![maze](https://github.com/aux-di/reinforcement-learning-samples/blob/master/screenshot/maze.png)
