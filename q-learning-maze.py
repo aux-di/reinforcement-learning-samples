@@ -34,7 +34,7 @@ class Maze():
     '''
     Redraw
     '''
-    def drawUnit(self, x, y, now = 0, q = 0):
+    def drawUnit(self, x, y, now = 0, red = 0):
         start = (self.unit_size * x, self.unit_size * y)
         end = (start[0] + self.unit_size, start[1] + self.unit_size)
 
@@ -45,10 +45,10 @@ class Maze():
         elif self.maze[y][x] == 3:
             cv2.rectangle(self.img, start, end, (128, 128, 128), -1)
         else:
-            if q == 0:
+            if red == 0:
                 cv2.rectangle(self.img, start, end, (0, 0, 0), -1)
             else:
-                cv2.rectangle(self.img, start, end, (0, 0, q), -1)
+                cv2.rectangle(self.img, start, end, (0, 0, red), -1)
             cv2.rectangle(self.img, start, end, (128, 128, 128), 1)
 
         if now == 1:
@@ -61,9 +61,9 @@ class Maze():
 
         y, x = position
         newy, newx = new_position
-        q = int(max(q_value[y][x]) * 255)
+        red = int(max(q_value[y][x]) * 255)   # Q-value(0~1) into Red(0~255)
 
-        self.drawUnit(x, y, 0, q)   # present position
+        self.drawUnit(x, y, 0, red)   # present position
         self.drawUnit(newx, newy, 1)    # new position
 
 class Agent():
