@@ -21,9 +21,9 @@ class Maze():
                      [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
                      ]    # 0:aisle, 1:start, 2:goal, 3:wall
         self.maze_size = (len(self.maze[0]), len(self.maze)) # x, y
-        self.unit_size = 60
-        self.width = self.unit_size * self.maze_size[0]
-        self.height = self.unit_size * self.maze_size[1]
+        self.unit_size = 60 # px
+        self.width = self.unit_size * self.maze_size[0] # window width
+        self.height = self.unit_size * self.maze_size[1]    # window height
         self.img = np.zeros((self.height, self.width, 3), np.uint8)  # all black
 
         # draw maze
@@ -31,6 +31,9 @@ class Maze():
             for x in range(self.maze_size[0]):
                 self.drawUnit(x, y)
 
+    '''
+    Redraw
+    '''
     def drawUnit(self, x, y, now = 0, q = 0):
         start = (self.unit_size * x, self.unit_size * y)
         end = (start[0] + self.unit_size, start[1] + self.unit_size)
@@ -51,14 +54,17 @@ class Maze():
         if now == 1:
             cv2.rectangle(self.img, start, end, (255, 255, 255), -1)
 
+    '''
+    Update Each progress
+    '''
     def update(self, position, new_position, q_value):
 
         y, x = position
         newy, newx = new_position
         q = int(max(q_value[y][x]) * 255)
 
-        self.drawUnit(x, y, 0, q)
-        self.drawUnit(newx, newy, 1)
+        self.drawUnit(x, y, 0, q)   # present position
+        self.drawUnit(newx, newy, 1)    # new position
 
 class Agent():
 
@@ -70,6 +76,7 @@ class Agent():
         self.maze = maze.maze
         self.reward = 1
 
+        # set Q-value zero (initial value) Y x X x 4
         for y in range(maze.maze_size[1]):
             q = []
             for x in range(maze.maze_size[0]):
@@ -77,6 +84,9 @@ class Agent():
 
             self.q_value.append(q)
 
+    '''
+    Action Each progress
+    '''
     def action(self, position):
 
         y, x = position
@@ -97,25 +107,25 @@ class Agent():
         next_position = position
 
         if direction == 0:
-            if self.maze[y - 1][x] == 3:
+            if self.maze[y - 1][x] == 3:    # avoid wall
                 wall = 1
             else:
                 next_position = [y - 1, x]
 
         elif direction == 1:
-            if self.maze[y][x + 1] == 3:
+            if self.maze[y][x + 1] == 3:    # avoid wall
                 wall = 1
             else:
                 next_position = [y, x + 1]
 
         elif direction == 2:
-            if self.maze[y + 1][x] == 3:
+            if self.maze[y + 1][x] == 3:    # avoid wall
                 wall = 1
             else:
                 next_position = [y + 1, x]
 
         elif direction == 3:
-            if self.maze[y][x - 1] == 3:
+            if self.maze[y][x - 1] == 3:    # avoid wall
                 wall = 1
             else:
                 next_position = [y, x - 1]
@@ -135,12 +145,15 @@ class Agent():
 
         return next_position
 
+    '''
+    Update Q-value
+    '''
     def update_q_value(self, position, next_position, direction):
         y, x = position
         newy, newx = next_position
         d = direction
 
-        if self.maze[newy][newx] == 2:
+        if self.maze[newy][newx] == 2:  # goal
             reward = self.reward
         else:
             reward = 0
@@ -152,20 +165,21 @@ def main():
     maze = Maze()
     agent = Agent(maze)
 
-    position = [1, 1]   # y, x
+    position = [1, 1]   # start position [y, x]
 
     cv2.imshow('image', maze.img)
 
     for i in range(16000):
 
-        new_position = agent.action(position)
-        maze.update(position, new_position, agent.q_value)
+        new_position = agent.action(position)   # get new position
+        maze.update(position, new_position, agent.q_value)  # update window
 
         cv2.imshow('image', maze.img)
-        cv2.waitKey(3)
+        cv2.waitKey(3)  # 3 msec
 
         position = new_position
 
+    cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
